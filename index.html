@@ -78,6 +78,14 @@
   li.hasbox.done > *:not(.who){opacity:.62}
   td:has(input:checked){background:#eafaf0 !important}
 
+  .fill-input{
+    border:none; border-bottom:2px solid var(--naranja); background:transparent;
+    font:inherit; color:var(--texto); padding:1px 6px; min-width:100px;
+    outline:none; border-radius:0; cursor:text; vertical-align:baseline;
+  }
+  .fill-input:focus{ background:rgba(255,107,53,.08); border-radius:3px 3px 0 0 }
+  .fill-input.filled{ color:var(--azul); font-weight:600 }
+
   footer{max-width:920px; margin:0 auto; padding:18px; color:var(--muted); font-size:.8rem; text-align:center}
   .banner{
     background:#fff4ee; border:1px solid var(--naranja); color:#9c3d10;
@@ -521,6 +529,56 @@ content.querySelectorAll('h2, li, td').forEach(node => {
   }
 });
 
+/* ---------- campos de texto (____) ---------- */
+const fills = [];
+let fillIdx = 0;
+
+function walkFills(node){
+  if(node.nodeType===3){
+    if(!/___{3,}/.test(node.textContent)) return;
+    const parts = node.textContent.split(/_{3,}/g);
+    const frag = document.createDocumentFragment();
+    parts.forEach((p,i)=>{
+      frag.appendChild(document.createTextNode(p));
+      if(i<parts.length-1){
+        const id='fill-'+fillIdx++;
+        const inp=document.createElement('input');
+        inp.type='text'; inp.className='fill-input'; inp.dataset.id=id;
+        inp.placeholder='…'; inp.size=14;
+        inp.addEventListener('input',()=>onFillChange(id,inp));
+        frag.appendChild(inp);
+        fills.push({id,input:inp});
+      }
+    });
+    node.parentNode.replaceChild(frag,node);
+    return;
+  }
+  if(/^(SCRIPT|STYLE|INPUT|TEXTAREA)$/.test(node.tagName||'')) return;
+  [...node.childNodes].forEach(walkFills);
+}
+walkFills(content);
+
+function onFillChange(id,inp){
+  inp.classList.toggle('filled',!!inp.value.trim());
+  const val=inp.value.trim();
+  if(useFirebase){
+    if(val) db.ref('fields/'+id).set({v:val,name:myName,at:Date.now()});
+    else db.ref('fields/'+id).remove();
+  } else {
+    const d=JSON.parse(localStorage.getItem('planFields')||'{}');
+    if(val) d[id]={v:val}; else delete d[id];
+    localStorage.setItem('planFields',JSON.stringify(d));
+  }
+}
+
+function applyFields(data){
+  fills.forEach(f=>{
+    const s=data[f.id];
+    f.input.value=s?s.v:'';
+    f.input.classList.toggle('filled',!!(s&&s.v));
+  });
+}
+
 /* ---------- estado ---------- */
 let state = {};
 const fmt = ms => { const d = new Date(ms);
@@ -580,11 +638,13 @@ function updateProgress(){
 if(useFirebase){
   setConn('Conectado · tiempo real', true);
   db.ref('tasks').on('value', snap => { state = snap.val() || {}; applyState(); });
+  db.ref('fields').on('value', snap => { applyFields(snap.val() || {}); });
   db.ref('.info/connected').on('value', s => setConn(s.val() ? 'Conectado · tiempo real' : 'Reconectando…', !!s.val()));
 }else{
   document.getElementById('cfgBanner').style.display = 'block';
   setConn('Local · sin sincronizar', false);
   loadLocal();
+  applyFields(JSON.parse(localStorage.getItem('planFields')||'{}'));
 }
 </script>
 </body>
