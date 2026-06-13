@@ -145,85 +145,15 @@ fecha_creacion: 2026-06-13
 | **Tema/sistema**  | Sistema automatizado de estacionamiento vertical tipo carruel                                  |
 | **Plazo**         | 1–2 semanas (plazo corto)                                                                      |
 | **Equipo**        | 3 expositores ·                                                                                |
-| **Formato**       | 33 diapositivas · objetivo **30 min** (el Modelo 1 dura 40–45 min → hay que comprimir, ver D6) |
+| **Formato**       | 33 diapositivas · objetivo **30 min** (el Modelo 1 dura 40–45 min → hay que comprimir)         |
 | **Paleta**        | Azul `#003366` · Naranja `#FF6B35` · Gris `#F5F5F5`                                            |
 | **Software base** | TIA Portal (programación) · PowerPoint                                                         |
 
-⚠️ **Tensión clave del Modelo 1:** es muy completo y exigente (código PID, P&ID, VAN/TIR, MTBF). En 1–2 semanas hay que decidir **qué se hace real y qué se justifica/estima**. Eso se resuelve en §2.
+⚠️ **Tensión clave del Modelo 1:** es muy completo y exigente (código PID, P&ID, VAN/TIR, MTBF). En 1–2 semanas hay que decidir **qué se hace real y qué se justifica/estima**.
 
 ---
 
-## 2. Decisiones críticas iniciales (con opciones)
-
-Estas decisiones definen cuánto trabajo real implica el resto. Cada una incluye opciones y una recomendación según el plazo corto.
-
-### D1 — Cerrar la ficha técnica del proceso
-El tema está definido; falta dejarlo por escrito para que los 3 lo expliquen igual.
-
-- [ ] **Planta / proceso:** ____________________
-- [ ] **Variable controlada:** ____________________
-- [ ] **Variable manipulada:** ____________________
-- [ ] **Entradas (sensores):** ____________________
-- [ ] **Salidas (actuadores):** ____________________
-- [ ] **Restricciones (tiempo, seguridad, energía, espacio):** ____________________
-
-### D2 — ¿Maqueta física o solo simulación?
-Define las slides 18, 23, 24 y los videos.
-
-| Opción | Implica | Recomendado si… |
-| :- | :- | :- |
-| **A. Maqueta física + simulación** | Más nota y realismo; videos reales (slides 23–24). Mucho trabajo de montaje. | La maqueta ya está armada o muy avanzada |
-| **B. Solo simulación Factory I/O** | Menos trabajo; videos = capturas/pantalla de simulación. Menor impacto físico. | Arrancan casi de cero con 2 semanas |
-| **C. Maqueta mínima + simulación fuerte** | Equilibrio: una maqueta sencilla que demuestre el principio + simulación robusta. | **Recomendado por defecto en plazo corto** |
-
-> Decisión tomada: ____  · Responsable de la maqueta: ____
-
-### D3 — Controlador (PLC)
-El modelo asume **Siemens S7-1200**.
-
-- **Opción A:** S7-1200 físico (si lo tienen disponible en el lab). → coherente con todo el modelo.
-- **Opción B:** PLC simulado en TIA Portal (PLCSIM) + Factory I/O. → válido si no hay hardware. **Recomendado** si la opción B/C de D2.
-
-> Decisión: ____
-
-### D4 — Algoritmo de control
-El modelo muestra un **PID** (slides 21, 28). Conviene elegir según la variable:
-
-- **Variable continua** (temperatura, nivel, presión, velocidad) → **PID** (sigue el modelo tal cual).
-- **Proceso secuencial / on-off** (transporte, llenado por etapas, semáforo de estados) → **lógica secuencial / Grafcet** (más simple de programar y explicar).
-
-> ⚠️ Si el proceso NO es de variable continua, forzar un PID complica la defensa. Elegir el que corresponda al proceso real de D1.
-> Decisión: ____
-
-### D5 — Análisis económico (moneda y cifras)
-El modelo trae cifras de **ejemplo en USD muy optimistas** (VAN ≈ $108k, **TIR 236%**, payback 5 meses). Esos números no son creíbles si no se sustentan.
-
-- **Opción A:** Recalcular con costos reales de los componentes (cotizaciones). Más creíble; requiere armar el flujo de caja propio.
-- **Opción B:** Mantener estructura del modelo pero con cifras estimadas y **realistas** (TIR/VAN coherentes con la inversión).
-- **Decidir moneda:** USD (como el modelo) o **Guaraníes** (contexto local Paraguay).
-
-> **Recomendación:** Opción A con cotizaciones reales aunque sean aproximadas, y dejar fórmula de VAN/TIR en Excel para defender el cálculo. → ver Fase 5 (§5).
-> Decisión: ____ · Moneda: ____
-
-### D6 — Cómo comprimir de 40–45 min a 30 min
-El propio Modelo 1 admite que dura 40–45 min. Recortes sugeridos (elegir):
-
-- [ ] Fusionar los **3 slides de código** (20, 21, 22) en **1 slide resumen** + apéndice de respaldo.
-- [ ] Reducir el bloque económico de **4 slides (26–29) a 2** (inversión + indicadores VAN/TIR/payback).
-- [ ] Videos de **≤45 seg** cada uno (no 60).
-- [ ] Resultados (slide 25) en **una sola tabla** clave, sin sub-tablas largas.
-
-> Meta de tiempo por expositor: **~10 min c/u**. Ensayar con cronómetro (Fase 7).
-
-### D7 — Origen de los resultados (slide 25)
-- **Opción A:** Mediciones reales de la maqueta/simulación (lo ideal).
-- **Opción B:** Resultados de la **simulación Factory I/O** + estimaciones justificadas.
-
-> Decisión: ____
-
----
-
-## 3. Reparto del equipo (3 expositores · ~10 min c/u)
+## 2. Reparto del equipo (3 expositores · ~10 min c/u)
 
 Reparto equilibrado por tiempo (el Modelo 1 viene desbalanceado, esto lo corrige):
 
@@ -243,7 +173,7 @@ Reparto equilibrado por tiempo (el Modelo 1 viene desbalanceado, esto lo corrige
 
 ---
 
-## 4. Inventario de exigencias y entregables (las 33 slides)
+## 3. Inventario de exigencias y entregables (las 33 slides)
 
 Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a medida que se produce el material.
 
@@ -283,17 +213,13 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 | 32 | Agradecimiento | Slide de cierre con profesores e institución | E3 | [ ] |
 | 33 | Preguntas | Slide final + preparación banco de preguntas (§9) | Todos | [ ] |
 
-> Si se aplica D6, marcar aquí las slides fusionadas: 20+21+22 → ____ · 26–29 → ____
-
 ---
 
-## 5. Plan de acción por fases
+## 4. Plan de acción por fases
 
 > Avanzar en orden: no pasar a la siguiente fase sin cerrar la anterior. Marcar cada tarea a medida que se completa.
 
-### Fase 0 — Decisiones y arranque
-- [ ] Resolver las decisiones D1–D7 (§2)
-- [ ] Cerrar la ficha técnica del proceso (D1)
+### Fase 0 — Arranque
 - [ ] Repartir tareas entre E1 / E2 / E3
 - [ ] Crear la estructura de carpetas (§10)
 - [ ] Recolectar las 5 fuentes del estado del arte
@@ -327,13 +253,13 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 
 ### Fase 4 — Simulación y maqueta (E3)
 - [ ] Simulación en Factory I/O + capturas y video (slide 18)
-- [ ] Montaje / ajuste de la maqueta (según D2)
+- [ ] Montaje / ajuste de la maqueta
 - [ ] Fotos de la maqueta (slide 23)
 - [ ] Video de la maqueta (slide 23)
 - [ ] Video de integración / conexiones (slide 24)
 
 ### Fase 5 — Datos y economía (E3 / enzo)
-- [ ] Medir y registrar resultados (slide 25, según D7)
+- [ ] Medir y registrar resultados (slide 25)
 - [ ] Cotizaciones reales de componentes
 - [ ] Tabla de inversión inicial (slide 26)
 - [ ] Flujo de caja anual (slide 27)
@@ -346,7 +272,7 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 - [ ] Agradecimiento (slide 32)
 - [ ] Slide de preguntas (slide 33)
 - [ ] Integrar las 33 slides en el `.pptx` con estilo único
-- [ ] Aplicar los recortes de D6 para entrar en 30 min
+- [ ] Ajustar contenido para entrar en 30 min
 - [ ] Revisar coherencia numérica entre todas las slides
 
 ### Fase 7 — Ensayos y defensa (todos)
@@ -359,7 +285,7 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 
 ---
 
-## 6. Estándar visual (aplicar a las 33 slides)
+## 5. Estándar visual (aplicar a las 33 slides)
 
 - Paleta fija: azul `#003366`, naranja `#FF6B35`, gris `#F5F5F5`. Máx. 3 colores.
 - Una idea principal por slide · máx. 6 líneas de texto.
@@ -371,20 +297,20 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 
 ---
 
-## 7. Riesgos y mitigación
+## 6. Riesgos y mitigación
 
 | Riesgo | Impacto | Mitigación |
 | :- | :- | :- |
-| Se pasa de 30 min | Penalización | Aplicar recortes D6; ensayar con cronómetro |
-| Cifras económicas poco creíbles (TIR 236%) | Preguntas difíciles | Recalcular con cotizaciones reales (D5); tener el Excel a mano |
-| Maqueta no lista a tiempo | Falta video clave | Plan B: D2 opción C (maqueta mínima) o simulación |
-| Código PID difícil de explicar | Dudas de la mesa | Elegir bien el algoritmo (D4); ensayar la explicación por etapas |
+| Se pasa de 30 min | Penalización | Ajustar contenido; ensayar con cronómetro |
+| Cifras económicas poco creíbles (TIR 236%) | Preguntas difíciles | Recalcular con cotizaciones reales; tener el Excel a mano |
+| Maqueta no lista a tiempo | Falta video clave | Plan B: maqueta mínima o solo simulación |
+| Código PID difícil de explicar | Dudas de la mesa | Ensayar la explicación por etapas |
 | Los 3 no dominan todo el proyecto | Mala defensa | Cada integrante estudia el bloque de los otros 2 |
 | Datos inconsistentes entre slides | Pierde credibilidad | enzo revisa coherencia numérica en el armado final |
 
 ---
 
-## 8. Checklist final pre-defensa
+## 7. Checklist final pre-defensa
 
 - [ ] Las 33 slides cargadas y numeradas, estilo unificado.
 - [ ] Videos probados en la notebook/proyector que se usará.
@@ -397,7 +323,7 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 
 ---
 
-## 9. Banco de preguntas probables (preparar respuestas)
+## 8. Banco de preguntas probables (preparar respuestas)
 
 1. ¿Por qué eligieron ese controlador/PLC?
 2. ¿Cómo seleccionaron sensores y actuadores (rango, precisión)?
@@ -412,7 +338,7 @@ Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a med
 
 ---
 
-## 10. Estructura sugerida en la bóveda
+## 9. Estructura sugerida en la bóveda
 
 ```
 Final CA2/
@@ -430,7 +356,7 @@ Final CA2/
 
 ---
 
-> **Próximo paso inmediato:** resolver §2 (D1–D7) hoy/este finde. Sin eso, el resto del cronograma no arranca bien.
+> **Próximo paso inmediato:** cerrar Fase 0 y arrancar con Fase 1 (contenido base).
            </script>
 
 <script>
