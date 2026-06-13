@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist · Defensa CA2</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --azul:#003366; --naranja:#FF6B35; --gris:#F5F5F5;
+    --texto:#1c2430; --muted:#6b7682; --linea:#e3e7ec; --ok:#1a9c5b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--texto); background:var(--gris); line-height:1.5;
+  }
+  header{
+    position:sticky; top:0; z-index:10; background:var(--azul); color:#fff;
+    padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,.18);
+  }
+  header .bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  header h1{font-size:1.05rem; margin:0; font-weight:650}
+  .conn{font-size:.72rem; padding:3px 9px; border-radius:999px; white-space:nowrap}
+  .conn.ok{background:rgba(26,156,91,.25); color:#bff0d3}
+  .conn.warn{background:rgba(255,107,53,.22); color:#ffd2bf}
+  .namerow{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap}
+  .namerow label{font-size:.82rem; display:flex; align-items:center; gap:6px}
+  .namerow input{
+    font-size:.9rem; padding:6px 10px; border-radius:7px; border:0; min-width:180px;
+  }
+  .hint{font-size:.74rem; color:#ffd2bf}
+  .progress{display:flex; align-items:center; gap:10px; margin-top:10px}
+  .progress-bar{flex:1; height:9px; background:rgba(255,255,255,.22); border-radius:999px; overflow:hidden}
+  #progFill{height:100%; width:0; background:var(--naranja); transition:width .25s ease}
+  #progText{font-size:.78rem; white-space:nowrap; min-width:96px; text-align:right}
+
+  main{max-width:920px; margin:22px auto; padding:0 18px 80px}
+  h2{
+    margin-top:34px; padding-bottom:6px; border-bottom:2px solid var(--linea);
+    color:var(--azul); font-size:1.3rem; scroll-margin-top:120px;
+  }
+  h3{color:#243b53; margin-top:22px}
+  h1.doc{color:var(--azul)}
+  blockquote{
+    margin:14px 0; padding:8px 14px; border-left:4px solid var(--naranja);
+    background:#fff; border-radius:0 8px 8px 0; color:#36424f;
+  }
+  code{background:#eef1f4; padding:1px 5px; border-radius:4px; font-size:.88em}
+  pre{background:#0e1b2a; color:#e6edf3; padding:14px; border-radius:10px; overflow:auto}
+  pre code{background:none; color:inherit}
+  table{border-collapse:collapse; width:100%; margin:14px 0; background:#fff; border-radius:8px; overflow:hidden}
+  th,td{border:1px solid var(--linea); padding:8px 10px; text-align:left; vertical-align:top; font-size:.9rem}
+  th{background:var(--azul); color:#fff; font-weight:600}
+  tr:nth-child(even) td{background:#fafbfc}
+
+  .seccount{
+    font-size:.72rem; font-weight:600; color:var(--muted);
+    background:#fff; border:1px solid var(--linea); border-radius:999px;
+    padding:2px 9px; margin-left:10px; vertical-align:middle;
+  }
+  .seccount.complete{color:#fff; background:var(--ok); border-color:var(--ok)}
+
+  /* checkboxes */
+  li.hasbox{list-style:none; margin-left:-22px; padding:3px 0}
+  input[type=checkbox]{
+    width:18px; height:18px; accent-color:var(--naranja); cursor:pointer;
+    vertical-align:middle; margin-right:7px;
+  }
+  td input[type=checkbox]{margin:0}
+  .who{
+    display:inline-block; font-size:.74rem; color:#fff; background:var(--naranja);
+    padding:1px 8px; border-radius:999px; margin-left:8px; white-space:nowrap;
+  }
+  .who:empty{display:none}
+  li.hasbox.done > *:not(.who){opacity:.62}
+  td:has(input:checked){background:#eafaf0 !important}
+
+  footer{max-width:920px; margin:0 auto; padding:18px; color:var(--muted); font-size:.8rem; text-align:center}
+  .banner{
+    background:#fff4ee; border:1px solid var(--naranja); color:#9c3d10;
+    padding:12px 16px; border-radius:10px; margin:18px auto; max-width:920px; font-size:.88rem;
+  }
+  .banner code{background:#ffe7da}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>✅ Checklist · Defensa Final CA2</h1>
+    <div id="conn" class="conn warn">iniciando…</div>
+  </div>
+  <div class="namerow">
+    <label>Tu nombre:
+      <input id="nombre" type="text" placeholder="Escribí tu nombre" autocomplete="name">
+    </label>
+    <span id="nameHint" class="hint"></span>
+  </div>
+  <div class="progress">
+    <div class="progress-bar"><div id="progFill"></div></div>
+    <div id="progText">0 / 0</div>
+  </div>
+</header>
+
+<div id="cfgBanner" class="banner" style="display:none">
+  ⚙️ Firebase no está configurado: las marcas se guardan <b>solo en este navegador</b> y no se comparten.
+  Para sincronizar entre los 3, completá <code>firebaseConfig</code> en <code>index.html</code> (ver <b>README</b>).
+</div>
+
+<main id="content">Cargando…</main>
+
+<footer>
+  Tablero colaborativo del plan de acción · marcá tu nombre y tildá lo que vayas completando.
+</footer>
+
+<!-- Contenido del plan (Markdown). Para actualizarlo, reemplazá el texto de abajo. -->
+<script type="text/plain" id="plan">---
+tipo: plan-de-accion
+proyecto: Defensa Final - Control Automático II
+modelo: Modelo 1 (PRIMER FINAL.md)
+fecha_creacion: 2026-06-13
+---
+
+# 📋 Plan de Acción — Defensa Final CA2 (Modelo 1)
+
+> Documento maestro para coordinar, documentar y ejecutar la defensa siguiendo **[[PRIMER FINAL|Modelo 1]]**.
+> Mantener este archivo abierto como tablero de control: marcar los `[ ]` a medida que se avanza.
+
+---
+
+## 1. Parámetros del proyecto
+
+| Parámetro         | Valor                                                                                          |
+| :---------------- | :--------------------------------------------------------------------------------------------- |
+| **Tema/sistema**  | Sistema automatizado de estacionamiento vertical tipo carruel                                  |
+| **Plazo**         | 1–2 semanas (plazo corto)                                                                      |
+| **Equipo**        | 3 expositores ·                                                                                |
+| **Formato**       | 33 diapositivas · objetivo **30 min** (el Modelo 1 dura 40–45 min → hay que comprimir, ver D6) |
+| **Paleta**        | Azul `#003366` · Naranja `#FF6B35` · Gris `#F5F5F5`                                            |
+| **Software base** | TIA Portal (programación) · PowerPoint                                                         |
+
+⚠️ **Tensión clave del Modelo 1:** es muy completo y exigente (código PID, P&ID, VAN/TIR, MTBF). En 1–2 semanas hay que decidir **qué se hace real y qué se justifica/estima**. Eso se resuelve en §2.
+
+---
+
+## 2. Decisiones críticas iniciales (con opciones)
+
+Estas decisiones definen cuánto trabajo real implica el resto. Cada una incluye opciones y una recomendación según el plazo corto.
+
+### D1 — Cerrar la ficha técnica del proceso
+El tema está definido; falta dejarlo por escrito para que los 3 lo expliquen igual.
+
+- [ ] **Planta / proceso:** ____________________
+- [ ] **Variable controlada:** ____________________
+- [ ] **Variable manipulada:** ____________________
+- [ ] **Entradas (sensores):** ____________________
+- [ ] **Salidas (actuadores):** ____________________
+- [ ] **Restricciones (tiempo, seguridad, energía, espacio):** ____________________
+
+### D2 — ¿Maqueta física o solo simulación?
+Define las slides 18, 23, 24 y los videos.
+
+| Opción | Implica | Recomendado si… |
+| :- | :- | :- |
+| **A. Maqueta física + simulación** | Más nota y realismo; videos reales (slides 23–24). Mucho trabajo de montaje. | La maqueta ya está armada o muy avanzada |
+| **B. Solo simulación Factory I/O** | Menos trabajo; videos = capturas/pantalla de simulación. Menor impacto físico. | Arrancan casi de cero con 2 semanas |
+| **C. Maqueta mínima + simulación fuerte** | Equilibrio: una maqueta sencilla que demuestre el principio + simulación robusta. | **Recomendado por defecto en plazo corto** |
+
+> Decisión tomada: ____  · Responsable de la maqueta: ____
+
+### D3 — Controlador (PLC)
+El modelo asume **Siemens S7-1200**.
+
+- **Opción A:** S7-1200 físico (si lo tienen disponible en el lab). → coherente con todo el modelo.
+- **Opción B:** PLC simulado en TIA Portal (PLCSIM) + Factory I/O. → válido si no hay hardware. **Recomendado** si la opción B/C de D2.
+
+> Decisión: ____
+
+### D4 — Algoritmo de control
+El modelo muestra un **PID** (slides 21, 28). Conviene elegir según la variable:
+
+- **Variable continua** (temperatura, nivel, presión, velocidad) → **PID** (sigue el modelo tal cual).
+- **Proceso secuencial / on-off** (transporte, llenado por etapas, semáforo de estados) → **lógica secuencial / Grafcet** (más simple de programar y explicar).
+
+> ⚠️ Si el proceso NO es de variable continua, forzar un PID complica la defensa. Elegir el que corresponda al proceso real de D1.
+> Decisión: ____
+
+### D5 — Análisis económico (moneda y cifras)
+El modelo trae cifras de **ejemplo en USD muy optimistas** (VAN ≈ $108k, **TIR 236%**, payback 5 meses). Esos números no son creíbles si no se sustentan.
+
+- **Opción A:** Recalcular con costos reales de los componentes (cotizaciones). Más creíble; requiere armar el flujo de caja propio.
+- **Opción B:** Mantener estructura del modelo pero con cifras estimadas y **realistas** (TIR/VAN coherentes con la inversión).
+- **Decidir moneda:** USD (como el modelo) o **Guaraníes** (contexto local Paraguay).
+
+> **Recomendación:** Opción A con cotizaciones reales aunque sean aproximadas, y dejar fórmula de VAN/TIR en Excel para defender el cálculo. → ver Fase 5 (§5).
+> Decisión: ____ · Moneda: ____
+
+### D6 — Cómo comprimir de 40–45 min a 30 min
+El propio Modelo 1 admite que dura 40–45 min. Recortes sugeridos (elegir):
+
+- [ ] Fusionar los **3 slides de código** (20, 21, 22) en **1 slide resumen** + apéndice de respaldo.
+- [ ] Reducir el bloque económico de **4 slides (26–29) a 2** (inversión + indicadores VAN/TIR/payback).
+- [ ] Videos de **≤45 seg** cada uno (no 60).
+- [ ] Resultados (slide 25) en **una sola tabla** clave, sin sub-tablas largas.
+
+> Meta de tiempo por expositor: **~10 min c/u**. Ensayar con cronómetro (Fase 7).
+
+### D7 — Origen de los resultados (slide 25)
+- **Opción A:** Mediciones reales de la maqueta/simulación (lo ideal).
+- **Opción B:** Resultados de la **simulación Factory I/O** + estimaciones justificadas.
+
+> Decisión: ____
+
+---
+
+## 3. Reparto del equipo (3 expositores · ~10 min c/u)
+
+Reparto equilibrado por tiempo (el Modelo 1 viene desbalanceado, esto lo corrige):
+
+| Expositor | Slides | Bloque temático | Tiempo aprox. |
+| :- | :- | :- | :- |
+| **E1** | 1–7 | Carátula, Introducción, Estado del arte (matrices), Problema, Lugar/Caso de estudio | ~9–10 min |
+| **E2** | 8–17 | Árbol de objetivos, Objetivos, Justificación, Normas, Ingeniería de diseño (esquema, P&ID, componentes, tablero), Diagrama de flujo ANSI | ~10 min |
+| **E3** | 18–33 | Simulación, Programación TIA, Maqueta e integración (videos), Resultados, Análisis económico, Conclusiones, Recomendaciones, Agradecimiento, Preguntas | ~10 min |
+
+**Rol de enzo (coordinación), además de su bloque:**
+- [ ] Mantener este plan actualizado y repartir tareas.
+- [ ] Armar el `.pptx` final integrando los 3 bloques (estilo único).
+- [ ] Controlar tiempos en los ensayos.
+- [ ] Custodiar la documentación de respaldo (cotizaciones, fichas, capturas).
+
+> 💡 Sugerencia: como coordinás y el bloque más analítico es el económico (E3), si querés llevar vos ese bloque tenés control directo sobre los números más sensibles. Si no, asignalo a quien maneje mejor Excel.
+
+---
+
+## 4. Inventario de exigencias y entregables (las 33 slides)
+
+Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a medida que se produce el material.
+
+| # | Slide / Exigencia | Qué producir (entregable) | Resp. | Estado |
+| :- | :- | :- | :- | :- |
+| 1 | Carátula | Plantilla con logo UNA, datos, integrantes, fecha | E1 | [ ] |
+| 2 | Introducción | Texto: contexto, problemática, alcance, tecnologías + infografía | E1 | [ ] |
+| 3 | Estado del arte – Matriz I | Tabla 5 fuentes (autor, año, título, objetivos, metodología) | E1 | [ ] |
+| 4 | Estado del arte – Matriz II | Tabla 5 fuentes (controlador, sensores, actuadores, tablero, cableado, programación) | E1 | [ ] |
+| 5 | Análisis y diferenciación | Tendencias + tabla "trabajos vs nuestra propuesta" | E1 | [ ] |
+| 6 | Problema | Árbol de problemas (efectos/central/causas) + video 20–30 s | E1 | [ ] |
+| 7 | Lugar / Caso de estudio | Ubicación, coordenadas, mapa + 2–3 fotos | E1 | [ ] |
+| 8 | Árbol de objetivos | Diagrama fines/central/medios (espejo del árbol de problemas) | E2 | [ ] |
+| 9 | Objetivo general + 6 específicos | OG estructurado + tabla OE1–OE6 (qué/para qué) | E2 | [ ] |
+| 10 | Justificación | 6 dimensiones (técnica, profesional, académica, científica, social, económica) con métricas | E2 | [ ] |
+| 11 | Marco normativo | Tabla normas nacionales + internacionales (IEC 61131-3, ISA 5.1, IEC 61508, etc.) | E2 | [ ] |
+| 12 | Esquema general del sistema | Diagrama de bloques (sensores–planta–PLC–actuadores–tablero–HMI) | E2 | [ ] |
+| 13 | Cableado / P&ID (ANSI) | Diagrama P&ID + leyenda + tabla de señales (etiqueta, tipo, rango, conexión PLC) | E2 | [ ] |
+| 14 | Componentes – Sensores | Tabla: modelo, foto, especificaciones, justificación | E2 | [ ] |
+| 15 | Componentes – PLC y actuadores | Tabla especificaciones PLC + tabla actuadores | E2 | [ ] |
+| 16 | Tablero eléctrico | Datos del tablero + plano distribución interna + protecciones | E2 | [ ] |
+| 17 | Diagrama de flujo ANSI | Flujograma de la lógica de control (inicio→sensores→decisión→salidas→paro) | E2 | [ ] |
+| 18 | Simulación Factory I/O | Capturas del layout + video 30–45 s | E3 | [ ] |
+| 19 | Programación TIA – estructura | Árbol del proyecto (OB/FC/FB/DB) + tabla de variables | E3 | [ ] |
+| 20 | Código – Lectura sensores | Captura FC1 (Ladder) + explicación funcional | E3 | [ ] |
+| 21 | Código – Lógica control | Captura FB1 (PID o lógica) + parámetros de tuning | E3 | [ ] |
+| 22 | Código – Salida actuadores | Captura FC3 + límites de seguridad | E3 | [ ] |
+| 23 | Maqueta física | 3 fotos (general, detalle, tuberías) + video 45–60 s | E3 | [ ] |
+| 24 | Integración / conexiones | Video 60 s del tablero+maqueta operando | E3 | [ ] |
+| 25 | Resultados cuantitativos | Tabla mejoras (antes/predicción/resultado) + confiabilidad (MTBF/MTTR) | E3 | [ ] |
+| 26 | Económico – Inversión | Tabla inversión inicial detallada (componentes, mano de obra, otros) | E3 | [ ] |
+| 27 | Económico – Flujo de caja | Beneficios y costos operativos anuales | E3 | [ ] |
+| 28 | Económico – VAN / TIR | Flujo proyectado 5 años + VAN, TIR, payback, sensibilidad | E3 | [ ] |
+| 29 | Rentabilidad / ROI | ROI por año + gráfico de barras | E3 | [ ] |
+| 30 | Conclusiones | 7 conclusiones (objetivo, desempeño, viabilidad técnica/económica, normas, aporte, escalabilidad) | E3 | [ ] |
+| 31 | Recomendaciones | Técnicas / operacionales / económicas / académicas | E3 | [ ] |
+| 32 | Agradecimiento | Slide de cierre con profesores e institución | E3 | [ ] |
+| 33 | Preguntas | Slide final + preparación banco de preguntas (§9) | Todos | [ ] |
+
+> Si se aplica D6, marcar aquí las slides fusionadas: 20+21+22 → ____ · 26–29 → ____
+
+---
+
+## 5. Plan de acción por fases
+
+> Avanzar en orden: no pasar a la siguiente fase sin cerrar la anterior. Marcar cada tarea a medida que se completa.
+
+### Fase 0 — Decisiones y arranque
+- [ ] Resolver las decisiones D1–D7 (§2)
+- [ ] Cerrar la ficha técnica del proceso (D1)
+- [ ] Repartir tareas entre E1 / E2 / E3
+- [ ] Crear la estructura de carpetas (§10)
+- [ ] Recolectar las 5 fuentes del estado del arte
+
+### Fase 1 — Contenido base (E1 + E2)
+- [ ] Introducción (slide 2)
+- [ ] Matriz bibliográfica I (slide 3)
+- [ ] Matriz bibliográfica II (slide 4)
+- [ ] Análisis y diferenciación (slide 5)
+- [ ] Árbol de problemas (slide 6)
+- [ ] Grabar video del problema (slide 6)
+- [ ] Lugar / caso de estudio (slide 7)
+- [ ] Árbol de objetivos (slide 8)
+- [ ] Objetivo general + 6 específicos (slide 9)
+- [ ] Justificación en 6 dimensiones (slide 10)
+- [ ] Marco normativo (slide 11)
+
+### Fase 2 — Ingeniería de diseño (E2)
+- [ ] Esquema general del sistema (slide 12)
+- [ ] P&ID + tabla de señales (slide 13)
+- [ ] Fichas técnicas de sensores (slide 14)
+- [ ] Fichas técnicas de PLC y actuadores (slide 15)
+- [ ] Diseño del tablero eléctrico (slide 16)
+- [ ] Diagrama de flujo ANSI (slide 17)
+
+### Fase 3 — Programación (E3)
+- [ ] Estructura del proyecto TIA + tabla de variables (slide 19)
+- [ ] Código de lectura de sensores — FC1 (slide 20)
+- [ ] Código de lógica de control / PID — FB1 (slide 21)
+- [ ] Código de salida a actuadores — FC3 (slide 22)
+
+### Fase 4 — Simulación y maqueta (E3)
+- [ ] Simulación en Factory I/O + capturas y video (slide 18)
+- [ ] Montaje / ajuste de la maqueta (según D2)
+- [ ] Fotos de la maqueta (slide 23)
+- [ ] Video de la maqueta (slide 23)
+- [ ] Video de integración / conexiones (slide 24)
+
+### Fase 5 — Datos y economía (E3 / enzo)
+- [ ] Medir y registrar resultados (slide 25, según D7)
+- [ ] Cotizaciones reales de componentes
+- [ ] Tabla de inversión inicial (slide 26)
+- [ ] Flujo de caja anual (slide 27)
+- [ ] VAN / TIR / payback en Excel (slide 28)
+- [ ] ROI + gráfico (slide 29)
+
+### Fase 6 — Cierre de contenido y armado (enzo)
+- [ ] Conclusiones (slide 30)
+- [ ] Recomendaciones (slide 31)
+- [ ] Agradecimiento (slide 32)
+- [ ] Slide de preguntas (slide 33)
+- [ ] Integrar las 33 slides en el `.pptx` con estilo único
+- [ ] Aplicar los recortes de D6 para entrar en 30 min
+- [ ] Revisar coherencia numérica entre todas las slides
+
+### Fase 7 — Ensayos y defensa (todos)
+- [ ] Ensayo 1 completo con cronómetro
+- [ ] Ajustar tiempos (~10 min por expositor)
+- [ ] Ensayo 2 y 3
+- [ ] Preparar el banco de preguntas (§9)
+- [ ] Completar el checklist final pre-defensa (§8)
+- [ ] 🎤 Defensa
+
+---
+
+## 6. Estándar visual (aplicar a las 33 slides)
+
+- Paleta fija: azul `#003366`, naranja `#FF6B35`, gris `#F5F5F5`. Máx. 3 colores.
+- Una idea principal por slide · máx. 6 líneas de texto.
+- Misma tipografía en todo (títulos vs cuerpo consistentes).
+- Numerar diapositivas.
+- Reemplazar el "ASCII art" del Modelo 1 por **diagramas reales** (PowerPoint SmartArt, draw.io o las herramientas del lab).
+- Imágenes reales > texto. Videos ≤45 s, horizontales, buena luz y audio.
+- Destacar en cada sección los **números clave** (mejoras %, VAN, TIR).
+
+---
+
+## 7. Riesgos y mitigación
+
+| Riesgo | Impacto | Mitigación |
+| :- | :- | :- |
+| Se pasa de 30 min | Penalización | Aplicar recortes D6; ensayar con cronómetro |
+| Cifras económicas poco creíbles (TIR 236%) | Preguntas difíciles | Recalcular con cotizaciones reales (D5); tener el Excel a mano |
+| Maqueta no lista a tiempo | Falta video clave | Plan B: D2 opción C (maqueta mínima) o simulación |
+| Código PID difícil de explicar | Dudas de la mesa | Elegir bien el algoritmo (D4); ensayar la explicación por etapas |
+| Los 3 no dominan todo el proyecto | Mala defensa | Cada integrante estudia el bloque de los otros 2 |
+| Datos inconsistentes entre slides | Pierde credibilidad | enzo revisa coherencia numérica en el armado final |
+
+---
+
+## 8. Checklist final pre-defensa
+
+- [ ] Las 33 slides cargadas y numeradas, estilo unificado.
+- [ ] Videos probados en la notebook/proyector que se usará.
+- [ ] Excel económico de respaldo (VAN/TIR) abierto y listo.
+- [ ] Fichas técnicas y datasheets de componentes a mano.
+- [ ] Cada expositor ensayó su bloque ≤10 min.
+- [ ] Banco de preguntas repasado (§9).
+- [ ] Control remoto / clicker y cables de respaldo.
+- [ ] Copia del `.pptx` en pendrive + nube.
+
+---
+
+## 9. Banco de preguntas probables (preparar respuestas)
+
+1. ¿Por qué eligieron ese controlador/PLC?
+2. ¿Cómo seleccionaron sensores y actuadores (rango, precisión)?
+3. ¿Qué norma usaron para el tablero y las protecciones?
+4. ¿Cómo validaron el sistema antes del montaje?
+5. ¿Qué pasa si falla un sensor? ¿Tienen paro de emergencia?
+6. ¿Por qué usaron Factory I/O?
+7. ¿Cómo dimensionaron las protecciones?
+8. ¿De dónde salen los números del VAN/TIR? ¿Es realista?
+9. ¿Qué diferencia su trabajo de los del estado del arte?
+10. ¿Es escalable industrialmente? ¿Mejorable con HMI/SCADA?
+
+---
+
+## 10. Estructura sugerida en la bóveda
+
+```
+Final CA2/
+├── PRIMER FINAL.md            (Modelo 1 — guía base)
+├── Plan de Accion - Defensa CA2.md   (este archivo)
+├── 01_Estado_del_arte/        (las 5 fuentes + matrices)
+├── 02_Ingenieria_diseño/      (P&ID, esquemas, fichas componentes)
+├── 03_Programacion/           (capturas TIA, tabla variables)
+├── 04_Simulacion_Maqueta/     (capturas Factory I/O, fotos, videos)
+├── 05_Economico/              (Excel VAN-TIR, cotizaciones)
+└── 06_Presentacion/           (.pptx final + videos)
+```
+
+- [ ] Crear estas carpetas para ordenar el material por bloque.
+
+---
+
+> **Próximo paso inmediato:** resolver §2 (D1–D7) hoy/este finde. Sin eso, el resto del cronograma no arranca bien.
+           </script>
+
+<script>
+/* =========================================================
+   1) CONFIGURACIÓN DE FIREBASE  (ver README para obtenerla)
+   Pegá acá los valores de tu proyecto. Mientras diga
+   "PEGA_AQUI", la web funciona en modo local (sin compartir).
+   ========================================================= */
+const firebaseConfig = {
+  apiKey:            "AIzaSyARZu3WN1_iUPEbi8dPduHLjZIiY3rp7uw",
+  authDomain:        "carrusel-ca2.firebaseapp.com",
+  databaseURL:       "https://carrusel-ca2-default-rtdb.firebaseio.com",
+  projectId:         "carrusel-ca2",
+  storageBucket:     "carrusel-ca2.firebasestorage.app",
+  messagingSenderId: "1004536596364",
+  appId:             "1:1004536596364:web:6fd2ee184218da912478a9",
+  measurementId:     "G-ZPC0S1T5G7"
+};
+/* ========================================================= */
+
+let db = null, useFirebase = false;
+try{
+  if(firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("PEGA_AQUI")){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    useFirebase = true;
+  }
+}catch(e){ console.error("Firebase:", e); }
+
+const connEl = document.getElementById('conn');
+const setConn = (t, ok) => { connEl.textContent = t; connEl.className = 'conn ' + (ok?'ok':'warn'); };
+
+/* ---------- nombre del usuario ---------- */
+const nameInput = document.getElementById('nombre');
+let myName = localStorage.getItem('planUserName') || '';
+nameInput.value = myName;
+nameInput.addEventListener('input', () => {
+  myName = nameInput.value.trim();
+  localStorage.setItem('planUserName', myName);
+});
+
+/* ---------- markdown ---------- */
+function preprocess(md){
+  md = md.replace(/^﻿?---[\s\S]*?\n---\s*/, '');         // quitar frontmatter YAML
+  md = md.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2');      // [[a|b]] -> b
+  md = md.replace(/\[\[([^\]]+)\]\]/g, '$1');                 // [[a]]   -> a
+  return md;
+}
+const rawMd = document.getElementById('plan').textContent;
+const content = document.getElementById('content');
+content.innerHTML = marked.parse(preprocess(rawMd));
+const h1 = content.querySelector('h1'); if(h1) h1.classList.add('doc');
+
+/* ---------- registro de casillas ---------- */
+const slug = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+const used = {};
+const uid = base => { let id = base || 'item'; if(used[id]){ used[id]++; id = base+'-'+used[id]; } else { used[id]=1; } return id; };
+
+function liText(li){
+  const c = li.cloneNode(true);
+  c.querySelectorAll('ul,ol,input,.who').forEach(n=>n.remove());
+  return c.textContent.trim();
+}
+
+const boxes = []; // {id, input, who, sectionEl}
+function registerBox(id, input, container, sectionEl, afterEl){
+  input.dataset.id = id;
+  input.disabled = false;
+  const who = document.createElement('span');
+  who.className = 'who'; who.dataset.for = id;
+  afterEl.insertAdjacentElement('afterend', who);
+  if(container.tagName === 'LI') container.classList.add('hasbox');
+  input.addEventListener('change', () => onToggle(id, input));
+  boxes.push({id, input, who, sectionEl});
+}
+
+let curSection = null;
+content.querySelectorAll('h2, li, td').forEach(node => {
+  if(node.tagName === 'H2'){ curSection = node; return; }
+  if(node.tagName === 'LI'){
+    const input = node.querySelector(':scope > input[type=checkbox]');
+    if(!input) return;
+    registerBox(uid('t-'+slug(liText(node))), input, node, curSection, input);
+  }
+  if(node.tagName === 'TD'){
+    const t = node.textContent.trim();
+    if(t === '[ ]' || t.toLowerCase() === '[x]'){
+      node.textContent = '';
+      const input = document.createElement('input'); input.type = 'checkbox';
+      node.appendChild(input);
+      const firstCell = node.parentNode.querySelector('td');
+      const num = firstCell ? firstCell.textContent.trim() : '';
+      registerBox(uid('slide-' + (num || slug(node.parentNode.textContent))), input, node, curSection, input);
+    }
+  }
+});
+
+/* ---------- estado ---------- */
+let state = {};
+const fmt = ms => { const d = new Date(ms);
+  return d.toLocaleDateString('es',{day:'2-digit',month:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}); };
+
+function applyState(){
+  boxes.forEach(b => {
+    const s = state[b.id]; const done = !!(s && s.done);
+    b.input.checked = done;
+    if(b.input.closest('.hasbox')) b.input.closest('.hasbox').classList.toggle('done', done);
+    b.who.textContent = done ? ('✓ ' + (s.name||'?') + (s.at ? ' · ' + fmt(s.at) : '')) : '';
+  });
+  updateProgress();
+}
+
+function onToggle(id, input){
+  if(!myName){
+    alert('Primero escribí tu nombre arriba para poder marcar.');
+    input.checked = !input.checked;
+    nameInput.focus();
+    return;
+  }
+  if(input.checked){
+    const rec = {done:true, name:myName, at:Date.now()};
+    state[id] = rec;
+    if(useFirebase) db.ref('tasks/'+id).set(rec); else saveLocal();
+  } else {
+    delete state[id];
+    if(useFirebase) db.ref('tasks/'+id).remove(); else saveLocal();
+  }
+  applyState();
+}
+
+const saveLocal = () => localStorage.setItem('planTasks', JSON.stringify(state));
+const loadLocal = () => { try{ state = JSON.parse(localStorage.getItem('planTasks')||'{}'); }catch(e){ state={}; } applyState(); };
+
+function updateProgress(){
+  const total = boxes.length;
+  const done = boxes.filter(b => state[b.id] && state[b.id].done).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progText').textContent = done + ' / ' + total + ' (' + pct + '%)';
+  // conteo por sección
+  const map = new Map();
+  boxes.forEach(b => { if(!b.sectionEl) return;
+    const m = map.get(b.sectionEl) || {d:0,t:0}; m.t++; if(state[b.id] && state[b.id].done) m.d++; map.set(b.sectionEl, m); });
+  map.forEach((m,h) => {
+    let badge = h.querySelector('.seccount');
+    if(!badge){ badge = document.createElement('span'); badge.className='seccount'; h.appendChild(badge); }
+    badge.textContent = m.d + '/' + m.t;
+    badge.classList.toggle('complete', m.t>0 && m.d===m.t);
+  });
+}
+
+/* ---------- arranque ---------- */
+if(useFirebase){
+  setConn('Conectado · tiempo real', true);
+  db.ref('tasks').on('value', snap => { state = snap.val() || {}; applyState(); });
+  db.ref('.info/connected').on('value', s => setConn(s.val() ? 'Conectado · tiempo real' : 'Reconectando…', !!s.val()));
+}else{
+  document.getElementById('cfgBanner').style.display = 'block';
+  setConn('Local · sin sincronizar', false);
+  loadLocal();
+}
+</script>
+</body>
+</html>
