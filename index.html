@@ -1,577 +1,370 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Checklist · Defensa CA2</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Económico — Sistema de Estacionamiento Vertical tipo Carrusel</title>
 <style>
-  :root{
-    --azul:#003366; --naranja:#FF6B35; --gris:#F5F5F5;
-    --texto:#1c2430; --muted:#6b7682; --linea:#e3e7ec; --ok:#1a9c5b;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    color:var(--texto); background:var(--gris); line-height:1.5;
-  }
-  header{
-    position:sticky; top:0; z-index:10; background:var(--azul); color:#fff;
-    padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,.18);
-  }
-  header .bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
-  header h1{font-size:1.05rem; margin:0; font-weight:650}
-  .conn{font-size:.72rem; padding:3px 9px; border-radius:999px; white-space:nowrap}
-  .conn.ok{background:rgba(26,156,91,.25); color:#bff0d3}
-  .conn.warn{background:rgba(255,107,53,.22); color:#ffd2bf}
-  .namerow{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap}
-  .namerow label{font-size:.82rem; display:flex; align-items:center; gap:6px}
-  .namerow input{
-    font-size:.9rem; padding:6px 10px; border-radius:7px; border:0; min-width:180px;
-  }
-  .hint{font-size:.74rem; color:#ffd2bf}
-  .progress{display:flex; align-items:center; gap:10px; margin-top:10px}
-  .progress-bar{flex:1; height:9px; background:rgba(255,255,255,.22); border-radius:999px; overflow:hidden}
-  #progFill{height:100%; width:0; background:var(--naranja); transition:width .25s ease}
-  #progText{font-size:.78rem; white-space:nowrap; min-width:96px; text-align:right}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #1a1a2e; }
 
-  main{max-width:920px; margin:22px auto; padding:0 18px 80px}
-  h2{
-    margin-top:34px; padding-bottom:6px; border-bottom:2px solid var(--linea);
-    color:var(--azul); font-size:1.3rem; scroll-margin-top:120px;
+  .hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    color: white;
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
   }
-  h3{color:#243b53; margin-top:22px}
-  h1.doc{color:var(--azul)}
-  blockquote{
-    margin:14px 0; padding:8px 14px; border-left:4px solid var(--naranja);
-    background:#fff; border-radius:0 8px 8px 0; color:#36424f;
+  .hero .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
   }
-  code{background:#eef1f4; padding:1px 5px; border-radius:4px; font-size:.88em}
-  pre{background:#0e1b2a; color:#e6edf3; padding:14px; border-radius:10px; overflow:auto}
-  pre code{background:none; color:inherit}
-  table{border-collapse:collapse; width:100%; margin:14px 0; background:#fff; border-radius:8px; overflow:hidden}
-  th,td{border:1px solid var(--linea); padding:8px 10px; text-align:left; vertical-align:top; font-size:.9rem}
-  th{background:var(--azul); color:#fff; font-weight:600}
-  tr:nth-child(even) td{background:#fafbfc}
+  .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.2; }
+  .hero p { font-size: 1rem; opacity: 0.75; margin-bottom: 0.25rem; }
 
-  .seccount{
-    font-size:.72rem; font-weight:600; color:var(--muted);
-    background:#fff; border:1px solid var(--linea); border-radius:999px;
-    padding:2px 9px; margin-left:10px; vertical-align:middle;
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
   }
-  .seccount.complete{color:#fff; background:var(--ok); border-color:var(--ok)}
+  .kpi {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .kpi .label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi .value { font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
+  .kpi .sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  .kpi.green .value { color: #059669; }
+  .kpi.blue .value { color: #2563eb; }
+  .kpi.purple .value { color: #7c3aed; }
+  .kpi.orange .value { color: #d97706; }
 
-  /* checkboxes */
-  li.hasbox{list-style:none; margin-left:-22px; padding:3px 0}
-  input[type=checkbox]{
-    width:18px; height:18px; accent-color:var(--naranja); cursor:pointer;
-    vertical-align:middle; margin-right:7px;
-  }
-  td input[type=checkbox]{margin:0}
-  .who{
-    display:inline-block; font-size:.74rem; color:#fff; background:var(--naranja);
-    padding:1px 8px; border-radius:999px; margin-left:8px; white-space:nowrap;
-  }
-  .who:empty{display:none}
-  li.hasbox.done > *:not(.who){opacity:.62}
-  td:has(input:checked){background:#eafaf0 !important}
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem 3rem; }
 
-  .fill-input{
-    border:none; border-bottom:2px solid var(--naranja); background:transparent;
-    font:inherit; color:var(--texto); padding:1px 6px; min-width:100px;
-    outline:none; border-radius:0; cursor:text; vertical-align:baseline;
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #0f3460;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  .fill-input:focus{ background:rgba(255,107,53,.08); border-radius:3px 3px 0 0 }
-  .fill-input.filled{ color:var(--azul); font-weight:600 }
+  .section-title .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
 
-  footer{max-width:920px; margin:0 auto; padding:18px; color:var(--muted); font-size:.8rem; text-align:center}
-  .banner{
-    background:#fff4ee; border:1px solid var(--naranja); color:#9c3d10;
-    padding:12px 16px; border-radius:10px; margin:18px auto; max-width:920px; font-size:.88rem;
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1.5rem; }
+  thead tr { background: #1a1a2e; color: white; }
+  thead th { padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; }
+  thead th:last-child, thead th:nth-last-child(2) { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+  tbody tr:hover { background: #f8fafc; }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 11px 16px; font-size: 14px; color: #374151; }
+  td:last-child, td:nth-last-child(2) { text-align: right; }
+  .subtotal-row td { background: #f1f5f9; font-weight: 700; color: #1a1a2e; font-size: 14px; }
+  .total-row td { background: #1a1a2e; color: white; font-weight: 700; font-size: 15px; }
+  .qty { color: #9ca3af; font-size: 13px; }
+  .pct-badge {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
   }
-  .banner code{background:#ffe7da}
+  .pct-badge.big { background: #fef3c7; color: #92400e; }
+  .pct-badge.med { background: #ede9fe; color: #5b21b6; }
+  .pct-badge.sm  { background: #d1fae5; color: #065f46; }
+
+  .flujo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .flujo-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .flujo-card .year { font-size: 12px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; }
+  .flujo-card .amount { font-size: 1.1rem; font-weight: 700; }
+  .flujo-card .roi { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .flujo-card.negative .amount { color: #dc2626; }
+  .flujo-card.positive .amount { color: #059669; }
+  .flujo-card.zero .amount { color: #d97706; }
+
+  .sens-table table thead tr { background: #374151; }
+
+  .nota {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #78350f;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .nota strong { font-weight: 700; }
+
+  .conclusion-box {
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    color: white;
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    margin-top: 2rem;
+  }
+  .conclusion-box h3 { font-size: 1.1rem; margin-bottom: 0.75rem; opacity: 0.9; }
+  .conclusion-box p { font-size: 14px; opacity: 0.8; line-height: 1.7; }
+
+  .footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 12px;
+    color: #9ca3af;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.4rem; }
+    td, th { font-size: 12px; padding: 9px 10px; }
+    .kpi .value { font-size: 1.4rem; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <div class="bar">
-    <h1>✅ Checklist · Defensa Final CA2</h1>
-    <div id="conn" class="conn warn">iniciando…</div>
-  </div>
-  <div class="namerow">
-    <label>Tu nombre:
-      <input id="nombre" type="text" placeholder="Escribí tu nombre" autocomplete="name">
-    </label>
-    <span id="nameHint" class="hint"></span>
-  </div>
-  <div class="progress">
-    <div class="progress-bar"><div id="progFill"></div></div>
-    <div id="progText">0 / 0</div>
-  </div>
-</header>
 
-<div id="cfgBanner" class="banner" style="display:none">
-  ⚙️ Firebase no está configurado: las marcas se guardan <b>solo en este navegador</b> y no se comparten.
-  Para sincronizar entre los 3, completá <code>firebaseConfig</code> en <code>index.html</code> (ver <b>README</b>).
+<div class="hero">
+  <div class="badge">Control Automático 2 · Grupo 2 · FP-UNA · 2026</div>
+  <h1>Sistema Automático de Estacionamiento<br>Vertical tipo Carrusel</h1>
+  <p>Análisis económico completo · 8 espacios · San Lorenzo, Paraguay</p>
+  <p style="margin-top:0.5rem; font-size:13px; opacity:0.6;">Lucas Araujo &nbsp;·&nbsp; Enzo Fernandez &nbsp;·&nbsp; Fabiana Cáceres</p>
 </div>
 
-<main id="content">Cargando…</main>
-
-<footer>
-  Tablero colaborativo del plan de acción · marcá tu nombre y tildá lo que vayas completando.
-</footer>
-
-<!-- Contenido del plan (Markdown). Para actualizarlo, reemplazá el texto de abajo. -->
-<script type="text/plain" id="plan">---
-tipo: plan-de-accion
-proyecto: Defensa Final - Control Automático II
-modelo: Modelo 1 (PRIMER FINAL.md)
-fecha_creacion: 2026-06-13
----
-
-# 📋 Plan de Acción — Defensa Final CA2 (Modelo 1)
-
-> Documento maestro para coordinar, documentar y ejecutar la defensa siguiendo **[[PRIMER FINAL|Modelo 1]]**.
-> Mantener este archivo abierto como tablero de control: marcar los `[ ]` a medida que se avanza.
-
----
-
-## 1. Parámetros del proyecto
-
-| Parámetro         | Valor                                                                                          |
-| :---------------- | :--------------------------------------------------------------------------------------------- |
-| **Tema/sistema**  | Sistema automatizado de estacionamiento vertical tipo carruel                                  |
-| **Plazo**         | 1–2 semanas (plazo corto)                                                                      |
-| **Equipo**        | 3 expositores ·                                                                                |
-| **Formato**       | 33 diapositivas · objetivo **30 min** (el Modelo 1 dura 40–45 min → hay que comprimir)         |
-| **Paleta**        | Azul `#003366` · Naranja `#FF6B35` · Gris `#F5F5F5`                                            |
-| **Software base** | TIA Portal (programación) · PowerPoint                                                         |
-
-⚠️ **Tensión clave del Modelo 1:** es muy completo y exigente (código PID, P&ID, VAN/TIR, MTBF). En 1–2 semanas hay que decidir **qué se hace real y qué se justifica/estima**.
-
----
-
-## 2. Reparto del equipo (3 expositores · ~10 min c/u)
-
-Reparto equilibrado por tiempo (el Modelo 1 viene desbalanceado, esto lo corrige):
-
-| Expositor | Slides | Bloque temático | Tiempo aprox. |
-| :- | :- | :- | :- |
-| **E1** | 1–7 | Carátula, Introducción, Estado del arte (matrices), Problema, Lugar/Caso de estudio | ~9–10 min |
-| **E2** | 8–17 | Árbol de objetivos, Objetivos, Justificación, Normas, Ingeniería de diseño (esquema, P&ID, componentes, tablero), Diagrama de flujo ANSI | ~10 min |
-| **E3** | 18–33 | Simulación, Programación TIA, Maqueta e integración (videos), Resultados, Análisis económico, Conclusiones, Recomendaciones, Agradecimiento, Preguntas | ~10 min |
-
-**Rol de enzo (coordinación), además de su bloque:**
-- [ ] Mantener este plan actualizado y repartir tareas.
-- [ ] Armar el `.pptx` final integrando los 3 bloques (estilo único).
-- [ ] Controlar tiempos en los ensayos.
-- [ ] Custodiar la documentación de respaldo (cotizaciones, fichas, capturas).
-
-> 💡 Sugerencia: como coordinás y el bloque más analítico es el económico (E3), si querés llevar vos ese bloque tenés control directo sobre los números más sensibles. Si no, asignalo a quien maneje mejor Excel.
-
----
-
-## 3. Inventario de exigencias y entregables (las 33 slides)
-
-Checklist completo: cada fila es una exigencia del Modelo 1. Marcar estado a medida que se produce el material.
-
-| # | Slide / Exigencia | Qué producir (entregable) | Resp. | Estado |
-| :- | :- | :- | :- | :- |
-| 1 | Carátula | Plantilla con logo UNA, datos, integrantes, fecha | E1 | [ ] |
-| 2 | Introducción | Texto: contexto, problemática, alcance, tecnologías + infografía | E1 | [ ] |
-| 3 | Estado del arte – Matriz I | Tabla 5 fuentes (autor, año, título, objetivos, metodología) | E1 | [ ] |
-| 4 | Estado del arte – Matriz II | Tabla 5 fuentes (controlador, sensores, actuadores, tablero, cableado, programación) | E1 | [ ] |
-| 5 | Análisis y diferenciación | Tendencias + tabla "trabajos vs nuestra propuesta" | E1 | [ ] |
-| 6 | Problema | Árbol de problemas (efectos/central/causas) + video 20–30 s | E1 | [ ] |
-| 7 | Lugar / Caso de estudio | Ubicación, coordenadas, mapa + 2–3 fotos | E1 | [ ] |
-| 8 | Árbol de objetivos | Diagrama fines/central/medios (espejo del árbol de problemas) | E2 | [ ] |
-| 9 | Objetivo general + 6 específicos | OG estructurado + tabla OE1–OE6 (qué/para qué) | E2 | [ ] |
-| 10 | Justificación | 6 dimensiones (técnica, profesional, académica, científica, social, económica) con métricas | E2 | [ ] |
-| 11 | Marco normativo | Tabla normas nacionales + internacionales (IEC 61131-3, ISA 5.1, IEC 61508, etc.) | E2 | [ ] |
-| 12 | Esquema general del sistema | Diagrama de bloques (sensores–planta–PLC–actuadores–tablero–HMI) | E2 | [ ] |
-| 13 | Cableado / P&ID (ANSI) | Diagrama P&ID + leyenda + tabla de señales (etiqueta, tipo, rango, conexión PLC) | E2 | [ ] |
-| 14 | Componentes – Sensores | Tabla: modelo, foto, especificaciones, justificación | E2 | [ ] |
-| 15 | Componentes – PLC y actuadores | Tabla especificaciones PLC + tabla actuadores | E2 | [ ] |
-| 16 | Tablero eléctrico | Datos del tablero + plano distribución interna + protecciones | E2 | [ ] |
-| 17 | Diagrama de flujo ANSI | Flujograma de la lógica de control (inicio→sensores→decisión→salidas→paro) | E2 | [ ] |
-| 18 | Simulación Factory I/O | Capturas del layout + video 30–45 s | E3 | [ ] |
-| 19 | Programación TIA – estructura | Árbol del proyecto (OB/FC/FB/DB) + tabla de variables | E3 | [ ] |
-| 20 | Código – Lectura sensores | Captura FC1 (Ladder) + explicación funcional | E3 | [ ] |
-| 21 | Código – Lógica control | Captura FB1 (PID o lógica) + parámetros de tuning | E3 | [ ] |
-| 22 | Código – Salida actuadores | Captura FC3 + límites de seguridad | E3 | [ ] |
-| 23 | Maqueta física | 3 fotos (general, detalle, tuberías) + video 45–60 s | E3 | [ ] |
-| 24 | Integración / conexiones | Video 60 s del tablero+maqueta operando | E3 | [ ] |
-| 25 | Resultados cuantitativos | Tabla mejoras (antes/predicción/resultado) + confiabilidad (MTBF/MTTR) | E3 | [ ] |
-| 26 | Económico – Inversión | Tabla inversión inicial detallada (componentes, mano de obra, otros) | E3 | [ ] |
-| 27 | Económico – Flujo de caja | Beneficios y costos operativos anuales | E3 | [ ] |
-| 28 | Económico – VAN / TIR | Flujo proyectado 5 años + VAN, TIR, payback, sensibilidad | E3 | [ ] |
-| 29 | Rentabilidad / ROI | ROI por año + gráfico de barras | E3 | [ ] |
-| 30 | Conclusiones | 7 conclusiones (objetivo, desempeño, viabilidad técnica/económica, normas, aporte, escalabilidad) | E3 | [ ] |
-| 31 | Recomendaciones | Técnicas / operacionales / económicas / académicas | E3 | [ ] |
-| 32 | Agradecimiento | Slide de cierre con profesores e institución | E3 | [ ] |
-| 33 | Preguntas | Slide final + preparación banco de preguntas (§9) | Todos | [ ] |
-
----
-
-## 4. Plan de acción por fases
-
-> Avanzar en orden: no pasar a la siguiente fase sin cerrar la anterior. Marcar cada tarea a medida que se completa.
-
-### Fase 0 — Arranque
-- [ ] Repartir tareas entre E1 / E2 / E3
-- [ ] Crear la estructura de carpetas (§10)
-- [ ] Recolectar las 5 fuentes del estado del arte
-
-### Fase 1 — Contenido base (E1 + E2)
-- [ ] Introducción (slide 2)
-- [ ] Matriz bibliográfica I (slide 3)
-- [ ] Matriz bibliográfica II (slide 4)
-- [ ] Análisis y diferenciación (slide 5)
-- [ ] Árbol de problemas (slide 6)
-- [ ] Grabar video del problema (slide 6)
-- [ ] Lugar / caso de estudio (slide 7)
-- [ ] Árbol de objetivos (slide 8)
-- [ ] Objetivo general + 6 específicos (slide 9)
-- [ ] Justificación en 6 dimensiones (slide 10)
-- [ ] Marco normativo (slide 11)
-
-### Fase 2 — Ingeniería de diseño (E2)
-- [ ] Esquema general del sistema (slide 12)
-- [ ] P&ID + tabla de señales (slide 13)
-- [ ] Fichas técnicas de sensores (slide 14)
-- [ ] Fichas técnicas de PLC y actuadores (slide 15)
-- [ ] Diseño del tablero eléctrico (slide 16)
-- [ ] Diagrama de flujo ANSI (slide 17)
-
-### Fase 3 — Programación (E3)
-- [ ] Estructura del proyecto TIA + tabla de variables (slide 19)
-- [ ] Código de lectura de sensores — FC1 (slide 20)
-- [ ] Código de lógica de control / PID — FB1 (slide 21)
-- [ ] Código de salida a actuadores — FC3 (slide 22)
-
-### Fase 4 — Simulación y maqueta (E3)
-- [ ] Simulación en Factory I/O + capturas y video (slide 18)
-- [ ] Montaje / ajuste de la maqueta
-- [ ] Fotos de la maqueta (slide 23)
-- [ ] Video de la maqueta (slide 23)
-- [ ] Video de integración / conexiones (slide 24)
-
-### Fase 5 — Datos y economía (E3 / enzo)
-- [ ] Medir y registrar resultados (slide 25)
-- [ ] Cotizaciones reales de componentes
-- [ ] Tabla de inversión inicial (slide 26)
-- [ ] Flujo de caja anual (slide 27)
-- [ ] VAN / TIR / payback en Excel (slide 28)
-- [ ] ROI + gráfico (slide 29)
-
-### Fase 6 — Cierre de contenido y armado (enzo)
-- [ ] Conclusiones (slide 30)
-- [ ] Recomendaciones (slide 31)
-- [ ] Agradecimiento (slide 32)
-- [ ] Slide de preguntas (slide 33)
-- [ ] Integrar las 33 slides en el `.pptx` con estilo único
-- [ ] Ajustar contenido para entrar en 30 min
-- [ ] Revisar coherencia numérica entre todas las slides
-
-### Fase 7 — Ensayos y defensa (todos)
-- [ ] Ensayo 1 completo con cronómetro
-- [ ] Ajustar tiempos (~10 min por expositor)
-- [ ] Ensayo 2 y 3
-- [ ] Preparar el banco de preguntas (§9)
-- [ ] Completar el checklist final pre-defensa (§8)
-- [ ] 🎤 Defensa
-
----
-
-## 5. Estándar visual (aplicar a las 33 slides)
-
-- Paleta fija: azul `#003366`, naranja `#FF6B35`, gris `#F5F5F5`. Máx. 3 colores.
-- Una idea principal por slide · máx. 6 líneas de texto.
-- Misma tipografía en todo (títulos vs cuerpo consistentes).
-- Numerar diapositivas.
-- Reemplazar el "ASCII art" del Modelo 1 por **diagramas reales** (PowerPoint SmartArt, draw.io o las herramientas del lab).
-- Imágenes reales > texto. Videos ≤45 s, horizontales, buena luz y audio.
-- Destacar en cada sección los **números clave** (mejoras %, VAN, TIR).
-
----
-
-## 6. Riesgos y mitigación
-
-| Riesgo | Impacto | Mitigación |
-| :- | :- | :- |
-| Se pasa de 30 min | Penalización | Ajustar contenido; ensayar con cronómetro |
-| Cifras económicas poco creíbles (TIR 236%) | Preguntas difíciles | Recalcular con cotizaciones reales; tener el Excel a mano |
-| Maqueta no lista a tiempo | Falta video clave | Plan B: maqueta mínima o solo simulación |
-| Código PID difícil de explicar | Dudas de la mesa | Ensayar la explicación por etapas |
-| Los 3 no dominan todo el proyecto | Mala defensa | Cada integrante estudia el bloque de los otros 2 |
-| Datos inconsistentes entre slides | Pierde credibilidad | enzo revisa coherencia numérica en el armado final |
-
----
-
-## 7. Checklist final pre-defensa
-
-- [ ] Las 33 slides cargadas y numeradas, estilo unificado.
-- [ ] Videos probados en la notebook/proyector que se usará.
-- [ ] Excel económico de respaldo (VAN/TIR) abierto y listo.
-- [ ] Fichas técnicas y datasheets de componentes a mano.
-- [ ] Cada expositor ensayó su bloque ≤10 min.
-- [ ] Banco de preguntas repasado (§9).
-- [ ] Control remoto / clicker y cables de respaldo.
-- [ ] Copia del `.pptx` en pendrive + nube.
-
----
-
-## 8. Banco de preguntas probables (preparar respuestas)
-
-1. ¿Por qué eligieron ese controlador/PLC?
-2. ¿Cómo seleccionaron sensores y actuadores (rango, precisión)?
-3. ¿Qué norma usaron para el tablero y las protecciones?
-4. ¿Cómo validaron el sistema antes del montaje?
-5. ¿Qué pasa si falla un sensor? ¿Tienen paro de emergencia?
-6. ¿Por qué usaron Factory I/O?
-7. ¿Cómo dimensionaron las protecciones?
-8. ¿De dónde salen los números del VAN/TIR? ¿Es realista?
-9. ¿Qué diferencia su trabajo de los del estado del arte?
-10. ¿Es escalable industrialmente? ¿Mejorable con HMI/SCADA?
-
----
-
-## 9. Estructura sugerida en la bóveda
-
-```
-Final CA2/
-├── PRIMER FINAL.md            (Modelo 1 — guía base)
-├── Plan de Accion - Defensa CA2.md   (este archivo)
-├── 01_Estado_del_arte/        (las 5 fuentes + matrices)
-├── 02_Ingenieria_diseño/      (P&ID, esquemas, fichas componentes)
-├── 03_Programacion/           (capturas TIA, tabla variables)
-├── 04_Simulacion_Maqueta/     (capturas Factory I/O, fotos, videos)
-├── 05_Economico/              (Excel VAN-TIR, cotizaciones)
-└── 06_Presentacion/           (.pptx final + videos)
-```
-
-- [ ] Crear estas carpetas para ordenar el material por bloque.
-
----
-
-> **Próximo paso inmediato:** cerrar Fase 0 y arrancar con Fase 1 (contenido base).
-           </script>
-
-<script>
-/* =========================================================
-   1) CONFIGURACIÓN DE FIREBASE  (ver README para obtenerla)
-   Pegá acá los valores de tu proyecto. Mientras diga
-   "PEGA_AQUI", la web funciona en modo local (sin compartir).
-   ========================================================= */
-const firebaseConfig = {
-  apiKey:            "AIzaSyARZu3WN1_iUPEbi8dPduHLjZIiY3rp7uw",
-  authDomain:        "carrusel-ca2.firebaseapp.com",
-  databaseURL:       "https://carrusel-ca2-default-rtdb.firebaseio.com",
-  projectId:         "carrusel-ca2",
-  storageBucket:     "carrusel-ca2.firebasestorage.app",
-  messagingSenderId: "1004536596364",
-  appId:             "1:1004536596364:web:6fd2ee184218da912478a9",
-  measurementId:     "G-ZPC0S1T5G7"
-};
-/* ========================================================= */
-
-let db = null, useFirebase = false;
-try{
-  if(firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("PEGA_AQUI")){
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-    useFirebase = true;
-  }
-}catch(e){ console.error("Firebase:", e); }
-
-const connEl = document.getElementById('conn');
-const setConn = (t, ok) => { connEl.textContent = t; connEl.className = 'conn ' + (ok?'ok':'warn'); };
-
-/* ---------- nombre del usuario ---------- */
-const nameInput = document.getElementById('nombre');
-let myName = localStorage.getItem('planUserName') || '';
-nameInput.value = myName;
-nameInput.addEventListener('input', () => {
-  myName = nameInput.value.trim();
-  localStorage.setItem('planUserName', myName);
-});
-
-/* ---------- markdown ---------- */
-function preprocess(md){
-  md = md.replace(/^﻿?---[\s\S]*?\n---\s*/, '');         // quitar frontmatter YAML
-  md = md.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2');      // [[a|b]] -> b
-  md = md.replace(/\[\[([^\]]+)\]\]/g, '$1');                 // [[a]]   -> a
-  return md;
-}
-const rawMd = document.getElementById('plan').textContent;
-const content = document.getElementById('content');
-content.innerHTML = marked.parse(preprocess(rawMd));
-const h1 = content.querySelector('h1'); if(h1) h1.classList.add('doc');
-
-/* ---------- registro de casillas ---------- */
-const slug = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
-  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
-const used = {};
-const uid = base => { let id = base || 'item'; if(used[id]){ used[id]++; id = base+'-'+used[id]; } else { used[id]=1; } return id; };
-
-function liText(li){
-  const c = li.cloneNode(true);
-  c.querySelectorAll('ul,ol,input,.who').forEach(n=>n.remove());
-  return c.textContent.trim();
-}
-
-const boxes = []; // {id, input, who, sectionEl}
-function registerBox(id, input, container, sectionEl, afterEl){
-  input.dataset.id = id;
-  input.disabled = false;
-  const who = document.createElement('span');
-  who.className = 'who'; who.dataset.for = id;
-  afterEl.insertAdjacentElement('afterend', who);
-  if(container.tagName === 'LI') container.classList.add('hasbox');
-  input.addEventListener('change', () => onToggle(id, input));
-  boxes.push({id, input, who, sectionEl});
-}
-
-let curSection = null;
-content.querySelectorAll('h2, li, td').forEach(node => {
-  if(node.tagName === 'H2'){ curSection = node; return; }
-  if(node.tagName === 'LI'){
-    const input = node.querySelector(':scope > input[type=checkbox]');
-    if(!input) return;
-    registerBox(uid('t-'+slug(liText(node))), input, node, curSection, input);
-  }
-  if(node.tagName === 'TD'){
-    const t = node.textContent.trim();
-    if(t === '[ ]' || t.toLowerCase() === '[x]'){
-      node.textContent = '';
-      const input = document.createElement('input'); input.type = 'checkbox';
-      node.appendChild(input);
-      const firstCell = node.parentNode.querySelector('td');
-      const num = firstCell ? firstCell.textContent.trim() : '';
-      registerBox(uid('slide-' + (num || slug(node.parentNode.textContent))), input, node, curSection, input);
-    }
-  }
-});
-
-/* ---------- campos de texto (____) ---------- */
-const fills = [];
-let fillIdx = 0;
-
-function walkFills(node){
-  if(node.nodeType===3){
-    if(!/___{3,}/.test(node.textContent)) return;
-    const parts = node.textContent.split(/_{3,}/g);
-    const frag = document.createDocumentFragment();
-    parts.forEach((p,i)=>{
-      frag.appendChild(document.createTextNode(p));
-      if(i<parts.length-1){
-        const id='fill-'+fillIdx++;
-        const inp=document.createElement('input');
-        inp.type='text'; inp.className='fill-input'; inp.dataset.id=id;
-        inp.placeholder='…'; inp.size=14;
-        inp.addEventListener('input',()=>onFillChange(id,inp));
-        frag.appendChild(inp);
-        fills.push({id,input:inp});
-      }
-    });
-    node.parentNode.replaceChild(frag,node);
-    return;
-  }
-  if(/^(SCRIPT|STYLE|INPUT|TEXTAREA)$/.test(node.tagName||'')) return;
-  [...node.childNodes].forEach(walkFills);
-}
-walkFills(content);
-
-function onFillChange(id,inp){
-  inp.classList.toggle('filled',!!inp.value.trim());
-  const val=inp.value.trim();
-  if(useFirebase){
-    if(val) db.ref('fields/'+id).set({v:val,name:myName,at:Date.now()});
-    else db.ref('fields/'+id).remove();
-  } else {
-    const d=JSON.parse(localStorage.getItem('planFields')||'{}');
-    if(val) d[id]={v:val}; else delete d[id];
-    localStorage.setItem('planFields',JSON.stringify(d));
-  }
-}
-
-function applyFields(data){
-  fills.forEach(f=>{
-    const s=data[f.id];
-    f.input.value=s?s.v:'';
-    f.input.classList.toggle('filled',!!(s&&s.v));
-  });
-}
-
-/* ---------- estado ---------- */
-let state = {};
-const fmt = ms => { const d = new Date(ms);
-  return d.toLocaleDateString('es',{day:'2-digit',month:'2-digit'}) + ' ' +
-         d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}); };
-
-function applyState(){
-  boxes.forEach(b => {
-    const s = state[b.id]; const done = !!(s && s.done);
-    b.input.checked = done;
-    if(b.input.closest('.hasbox')) b.input.closest('.hasbox').classList.toggle('done', done);
-    b.who.textContent = done ? ('✓ ' + (s.name||'?') + (s.at ? ' · ' + fmt(s.at) : '')) : '';
-  });
-  updateProgress();
-}
-
-function onToggle(id, input){
-  if(!myName){
-    alert('Primero escribí tu nombre arriba para poder marcar.');
-    input.checked = !input.checked;
-    nameInput.focus();
-    return;
-  }
-  if(input.checked){
-    const rec = {done:true, name:myName, at:Date.now()};
-    state[id] = rec;
-    if(useFirebase) db.ref('tasks/'+id).set(rec); else saveLocal();
-  } else {
-    delete state[id];
-    if(useFirebase) db.ref('tasks/'+id).remove(); else saveLocal();
-  }
-  applyState();
-}
-
-const saveLocal = () => localStorage.setItem('planTasks', JSON.stringify(state));
-const loadLocal = () => { try{ state = JSON.parse(localStorage.getItem('planTasks')||'{}'); }catch(e){ state={}; } applyState(); };
-
-function updateProgress(){
-  const total = boxes.length;
-  const done = boxes.filter(b => state[b.id] && state[b.id].done).length;
-  const pct = total ? Math.round(done/total*100) : 0;
-  document.getElementById('progFill').style.width = pct + '%';
-  document.getElementById('progText').textContent = done + ' / ' + total + ' (' + pct + '%)';
-  // conteo por sección
-  const map = new Map();
-  boxes.forEach(b => { if(!b.sectionEl) return;
-    const m = map.get(b.sectionEl) || {d:0,t:0}; m.t++; if(state[b.id] && state[b.id].done) m.d++; map.set(b.sectionEl, m); });
-  map.forEach((m,h) => {
-    let badge = h.querySelector('.seccount');
-    if(!badge){ badge = document.createElement('span'); badge.className='seccount'; h.appendChild(badge); }
-    badge.textContent = m.d + '/' + m.t;
-    badge.classList.toggle('complete', m.t>0 && m.d===m.t);
-  });
-}
-
-/* ---------- arranque ---------- */
-if(useFirebase){
-  setConn('Conectado · tiempo real', true);
-  db.ref('tasks').on('value', snap => { state = snap.val() || {}; applyState(); });
-  db.ref('fields').on('value', snap => { applyFields(snap.val() || {}); });
-  db.ref('.info/connected').on('value', s => setConn(s.val() ? 'Conectado · tiempo real' : 'Reconectando…', !!s.val()));
-}else{
-  document.getElementById('cfgBanner').style.display = 'block';
-  setConn('Local · sin sincronizar', false);
-  loadLocal();
-  applyFields(JSON.parse(localStorage.getItem('planFields')||'{}'));
-}
-</script>
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="label">Inversión total</div>
+    <div class="value">$100,690</div>
+    <div class="sub">USD estimado</div>
+  </div>
+  <div class="kpi green">
+    <div class="label">VAN (r = 12%)</div>
+    <div class="value">$7,124</div>
+    <div class="sub">VAN &gt; 0 → viable</div>
+  </div>
+  <div class="kpi blue">
+    <div class="label">TIR</div>
+    <div class="value">14.7%</div>
+    <div class="sub">TIR &gt; 12% → rentable</div>
+  </div>
+  <div class="kpi purple">
+    <div class="label">Payback</div>
+    <div class="value">3.37 años</div>
+    <div class="sub">≈ 40.5 meses</div>
+  </div>
+  <div class="kpi orange">
+    <div class="label">Flujo neto/año</div>
+    <div class="value">$30,813</div>
+    <div class="sub">Años 1–5</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- DESGLOSE INVERSIÓN -->
+  <div class="section-title">
+    <div class="icon" style="background:#e0f2fe;">🔩</div>
+    Desglose de la inversión inicial
+  </div>
+
+  <!-- Componentes principales -->
+  <div class="section-title" style="font-size:1rem; border-bottom:1px solid #e5e7eb; margin-top:1rem;">Componentes principales</div>
+  <table>
+    <thead><tr>
+      <th>Componente</th><th>Cant.</th><th>Valor unitario</th><th>Subtotal</th><th>% total</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>PLC Siemens S7-1200 CPU 1212C AC/DC/RLY</td><td class="qty">1</td><td>$226</td><td>$226</td><td><span class="pct-badge sm">0.2%</span></td></tr>
+      <tr><td>HMI Delta DOP 112WX</td><td class="qty">1</td><td>$5,596</td><td>$5,596</td><td><span class="pct-badge">5.8%</span></td></tr>
+      <tr><td>Sensor inductivo Autonics PRCM18-8DN</td><td class="qty">1</td><td>$206</td><td>$206</td><td><span class="pct-badge sm">0.2%</span></td></tr>
+      <tr><td>Sensor fotoeléctrico tipo reflex Panasonic CX-491</td><td class="qty">1</td><td>$530</td><td>$530</td><td><span class="pct-badge sm">0.6%</span></td></tr>
+      <tr><td>Seta de emergencia Siemens 3SB3000-1HA20</td><td class="qty">1</td><td>$265</td><td>$265</td><td><span class="pct-badge sm">0.3%</span></td></tr>
+      <tr><td>Módulo auxiliar ESP32 DevKit</td><td class="qty">1</td><td>$71</td><td>$71</td><td><span class="pct-badge sm">0.1%</span></td></tr>
+      <tr class="subtotal-row"><td colspan="3">Subtotal componentes principales</td><td>$6,894</td><td><span class="pct-badge">7.2%</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Actuadores y transmisión -->
+  <div class="section-title" style="font-size:1rem; border-bottom:1px solid #e5e7eb; margin-top:1rem;">Actuadores y transmisión</div>
+  <table>
+    <thead><tr>
+      <th>Componente</th><th>Cant.</th><th>Valor unitario</th><th>Subtotal</th><th>% total</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Variador de frecuencia Siemens SINAMICS G120C 2.2 kW</td><td class="qty">1</td><td>$4,200</td><td>$4,200</td><td><span class="pct-badge">4.4%</span></td></tr>
+      <tr><td>Motor SEW Eurodrive KA77 + 7.5 kW</td><td class="qty">1</td><td>$6,600</td><td>$6,600</td><td><span class="pct-badge">6.9%</span></td></tr>
+      <tr><td>Freno electromecánico</td><td class="qty">1</td><td>$1,200</td><td>$1,200</td><td><span class="pct-badge sm">1.3%</span></td></tr>
+      <tr><td>Piñón 40 dientes</td><td class="qty">1</td><td>$540</td><td>$540</td><td><span class="pct-badge sm">0.6%</span></td></tr>
+      <tr><td>Cadena ISO (roller chain)</td><td class="qty">1</td><td>$1,050</td><td>$1,050</td><td><span class="pct-badge sm">1.1%</span></td></tr>
+      <tr><td>Ejes y rodamientos</td><td class="qty">1</td><td>$1,410</td><td>$1,410</td><td><span class="pct-badge sm">1.5%</span></td></tr>
+      <tr class="subtotal-row"><td colspan="3">Subtotal actuadores y transmisión</td><td>$15,000</td><td><span class="pct-badge med">15.6%</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Tablero eléctrico -->
+  <div class="section-title" style="font-size:1rem; border-bottom:1px solid #e5e7eb; margin-top:1rem;">Tablero eléctrico y protecciones</div>
+  <table>
+    <thead><tr>
+      <th>Componente</th><th>Cant.</th><th>Valor unitario</th><th>Subtotal</th><th>% total</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Tablero IP55 + estructura</td><td class="qty">1</td><td>$1,800</td><td>$1,800</td><td><span class="pct-badge sm">1.9%</span></td></tr>
+      <tr><td>Breaker principal + protecciones</td><td class="qty">1</td><td>$900</td><td>$900</td><td><span class="pct-badge sm">0.9%</span></td></tr>
+      <tr><td>Contactores y relés</td><td class="qty">3</td><td>$250</td><td>$750</td><td><span class="pct-badge sm">0.8%</span></td></tr>
+      <tr><td>Bornes, canaletas y accesorios</td><td class="qty">1</td><td>$1,550</td><td>$1,550</td><td><span class="pct-badge sm">1.6%</span></td></tr>
+      <tr class="subtotal-row"><td colspan="3">Subtotal tablero eléctrico y protecciones</td><td>$5,000</td><td><span class="pct-badge">5.2%</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Estructura -->
+  <div class="section-title" style="font-size:1rem; border-bottom:1px solid #e5e7eb; margin-top:1rem;">Estructura y materiales</div>
+  <table>
+    <thead><tr>
+      <th>Componente</th><th>Cant.</th><th>Valor unitario</th><th>Subtotal</th><th>% total</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Estructura metálica principal (torres, bastidor)</td><td class="qty">1</td><td>$14,250</td><td>$14,250</td><td><span class="pct-badge big">14.9%</span></td></tr>
+      <tr><td>Plataformas/pallets para vehículos</td><td class="qty">8</td><td>$990</td><td>$7,917</td><td><span class="pct-badge">8.3%</span></td></tr>
+      <tr><td>Pintura y protección anticorrosiva</td><td class="qty">1</td><td>$3,167</td><td>$3,167</td><td><span class="pct-badge sm">3.3%</span></td></tr>
+      <tr><td>Obras civiles (fundación, anclajes)</td><td class="qty">1</td><td>$9,500</td><td>$9,500</td><td><span class="pct-badge">9.9%</span></td></tr>
+      <tr><td>Seguridad e infraestructura básica</td><td class="qty">1</td><td>$3,167</td><td>$3,167</td><td><span class="pct-badge sm">3.3%</span></td></tr>
+      <tr class="subtotal-row"><td colspan="3">Subtotal estructura y materiales</td><td>$38,001</td><td><span class="pct-badge big">39.6%</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Mano de obra -->
+  <div class="section-title" style="font-size:1rem; border-bottom:1px solid #e5e7eb; margin-top:1rem;">Mano de obra e ingeniería</div>
+  <table>
+    <thead><tr>
+      <th>Concepto</th><th>Cant.</th><th>Valor</th><th>Subtotal</th><th>% total</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Ingeniería y diseño</td><td class="qty">1</td><td>$5,000</td><td>$5,000</td><td><span class="pct-badge">5.2%</span></td></tr>
+      <tr><td>Cableado e instalación eléctrica</td><td class="qty">1</td><td>$4,500</td><td>$4,500</td><td><span class="pct-badge">4.7%</span></td></tr>
+      <tr><td>Montaje especializado (grúa, soldadura)</td><td class="qty">1</td><td>$10,000</td><td>$10,000</td><td><span class="pct-badge big">10.4%</span></td></tr>
+      <tr><td>Puesta en marcha y calibración</td><td class="qty">1</td><td>$3,500</td><td>$3,500</td><td><span class="pct-badge sm">3.6%</span></td></tr>
+      <tr><td>Documentación técnica</td><td class="qty">1</td><td>$8,000</td><td>$8,000</td><td><span class="pct-badge">8.3%</span></td></tr>
+      <tr class="subtotal-row"><td colspan="3">Subtotal mano de obra e ingeniería</td><td>$31,000</td><td><span class="pct-badge med">32.3%</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Total final -->
+  <table>
+    <tbody>
+      <tr class="subtotal-row"><td colspan="4">Subtotal inversión</td><td>$95,895</td></tr>
+      <tr class="subtotal-row"><td colspan="4">Contingencia técnica (5%)</td><td>$4,795</td></tr>
+      <tr class="total-row"><td colspan="4" style="font-size:16px;">💰 INVERSIÓN TOTAL ESTIMADA</td><td style="font-size:16px;">$100,690</td></tr>
+    </tbody>
+  </table>
+
+  <!-- FLUJO DE CAJA -->
+  <div class="section-title" style="margin-top:2.5rem;">
+    <div class="icon" style="background:#d1fae5;">📈</div>
+    Flujo de caja proyectado (5 años)
+  </div>
+  <div class="nota">
+    <strong>Supuestos:</strong> Tarifa Gs. 8,000/hora · Ocupación 7/8 espacios · 16 h/día · 350 días/año → Ingreso bruto anual: <strong>$41,813</strong> · Costos operativos: <strong>$11,000/año</strong> → Flujo neto anual: <strong>$30,813</strong>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th>Año</th><th>Inversión</th><th>Ingreso bruto</th><th>Costos operativos</th><th>Flujo neto</th><th>Flujo acumulado</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>Año 0</strong></td><td style="color:#dc2626;">-$103,950</td><td>$0</td><td>$0</td><td style="color:#dc2626;">-$103,950</td><td style="color:#dc2626;">-$103,950</td></tr>
+      <tr><td><strong>Año 1</strong></td><td>$0</td><td>$41,813</td><td>-$11,000</td><td style="color:#059669;">$30,813</td><td style="color:#dc2626;">-$73,137</td></tr>
+      <tr><td><strong>Año 2</strong></td><td>$0</td><td>$41,813</td><td>-$11,000</td><td style="color:#059669;">$30,813</td><td style="color:#dc2626;">-$42,324</td></tr>
+      <tr><td><strong>Año 3</strong></td><td>$0</td><td>$41,813</td><td>-$11,000</td><td style="color:#059669;">$30,813</td><td style="color:#dc2626;">-$11,511</td></tr>
+      <tr><td><strong>Año 4</strong></td><td>$0</td><td>$41,813</td><td>-$11,000</td><td style="color:#059669;">$30,813</td><td style="color:#059669;">+$19,302</td></tr>
+      <tr><td><strong>Año 5</strong></td><td>$0</td><td>$41,813</td><td>-$11,000</td><td style="color:#059669;">$30,813</td><td style="color:#059669;">+$50,115</td></tr>
+      <tr class="subtotal-row"><td colspan="5">VAN (r = 12%) → proyecto viable</td><td style="color:#059669;">$7,124 ✅</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ROI -->
+  <div class="section-title" style="margin-top:2rem;">
+    <div class="icon" style="background:#ede9fe;">📊</div>
+    Retorno sobre la inversión (ROI) año a año
+  </div>
+
+  <table>
+    <thead><tr>
+      <th>Año</th><th>Cálculo</th><th>ROI</th><th>Estado</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Año 1</td><td style="color:#6b7280; font-size:13px;">(30,813 / 103,950) × 100</td><td>29.6%</td><td><span class="pct-badge" style="background:#fee2e2; color:#b91c1c;">Inversión no recuperada</span></td></tr>
+      <tr><td>Año 2</td><td style="color:#6b7280; font-size:13px;">(61,626 / 103,950) × 100</td><td>59.3%</td><td><span class="pct-badge" style="background:#fee2e2; color:#b91c1c;">Inversión no recuperada</span></td></tr>
+      <tr><td>Año 3</td><td style="color:#6b7280; font-size:13px;">(92,439 / 103,950) × 100</td><td>88.9%</td><td><span class="pct-badge" style="background:#fef3c7; color:#92400e;">Casi recuperada</span></td></tr>
+      <tr><td>Año 4 ✅</td><td style="color:#6b7280; font-size:13px;">(123,252 / 103,950) × 100</td><td style="color:#059669; font-weight:700;">118.6%</td><td><span class="pct-badge sm">Recuperada · payback ≈ 40.5 m</span></td></tr>
+      <tr><td>Año 5</td><td style="color:#6b7280; font-size:13px;">(154,065 / 103,950) × 100</td><td style="color:#059669; font-weight:700;">148.2%</td><td><span class="pct-badge sm">+48% sobre inversión inicial</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ANÁLISIS DE SENSIBILIDAD -->
+  <div class="section-title" style="margin-top:2rem;">
+    <div class="icon" style="background:#fef3c7;">⚠️</div>
+    Análisis de sensibilidad
+  </div>
+  <div class="nota">
+    El proyecto es viable en el escenario base y optimista, pero <strong>NO es resistente a variaciones negativas</strong>. Una caída del 20% en los beneficios o un retraso de 1 año revierte la viabilidad. El margen de viabilidad es ajustado, no holgado.
+  </div>
+
+  <div class="sens-table">
+  <table>
+    <thead><tr>
+      <th>Escenario</th><th>Cambio</th><th>VAN resultante</th><th>TIR</th><th>Payback</th><th>Viabilidad</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>Base</strong></td><td>—</td><td style="color:#059669; font-weight:700;">$7,124</td><td>14.7%</td><td>40.5 meses</td><td><span class="pct-badge sm">✅ Viable</span></td></tr>
+      <tr><td><strong>Pesimista</strong></td><td>−20% beneficios</td><td style="color:#dc2626; font-weight:700;">−$15,091</td><td>6.0%</td><td>No recupera*</td><td><span class="pct-badge" style="background:#fee2e2; color:#b91c1c;">❌ No viable</span></td></tr>
+      <tr><td><strong>Optimista</strong></td><td>+20% beneficios</td><td style="color:#059669; font-weight:700;">$29,339</td><td>22.9%</td><td>33.7 meses</td><td><span class="pct-badge sm">✅ Viable</span></td></tr>
+      <tr><td><strong>Retraso 1 año</strong></td><td>Inicio año 2</td><td style="color:#dc2626; font-weight:700;">−$20,388</td><td>5.0%</td><td>No recupera*</td><td><span class="pct-badge" style="background:#fee2e2; color:#b91c1c;">❌ No viable</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-size:12px; color:#6b7280; margin-bottom:1.5rem;">*No recupera la inversión dentro del horizonte de 5 años analizado, dado que la TIR cae por debajo de la tasa de referencia (12%).</p>
+
+  <!-- Conclusión -->
+  <div class="conclusion-box">
+    <h3>Conclusión del análisis económico</h3>
+    <p>El proyecto presenta un <strong>VAN positivo de USD 7,124</strong>, una <strong>TIR del 14.7%</strong> (por encima de la tasa de referencia del 12%) y un <strong>período de recuperación de 3.37 años</strong>. Estos indicadores confirman la viabilidad económica del sistema, aunque con un margen ajustado. El escenario base es rentable y sostenible; sin embargo, el proyecto no es robusto ante shocks negativos, por lo que una implementación real requeriría gestión cuidadosa del cronograma y los ingresos operativos.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  Universidad Nacional de Asunción · Facultad Politécnica · Control Automático 2 · Grupo 2 · 2026<br>
+  Lucas Araujo · Enzo Fernandez · Fabiana Cáceres · Docentes: Ing. Chena · Ing. Ledesma · Ing. Candia · Ing. Franco
+</div>
+
 </body>
 </html>
